@@ -49,12 +49,14 @@ const Records = () => {
   ];
 
   gsap.registerPlugin(ScrollTrigger);
+
   useGSAP(() => {
     gsap.from(".stag", {
       y: 360,
       delay: 0.5,
       duration: 1.5,
     });
+
     gsap.from(".thin", {
       height: "17vh",
       scrollTrigger: {
@@ -67,6 +69,7 @@ const Records = () => {
       },
     });
   });
+  
   return (
     <div id="main" className="h-screen w-full overflow-y-auto overflow-x-hidden bg-white p-2">
       <div className="pt-[32vh]">
