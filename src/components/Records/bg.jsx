@@ -1,179 +1,248 @@
-/* eslint-disable react/no-unknown-property */
-import { Canvas, useFrame, useThree } from '@react-three/fiber';
-import { useMemo, useRef } from 'react';
-import * as THREE from 'three';
+import { useEffect, useRef } from 'react';
+import { Renderer, Program, Mesh, Triangle, Color } from 'ogl';
 
-const AntigravityInner = ({
-  count = 300,
-  magnetRadius = 10,
-  ringRadius = 10,
-  waveSpeed = 0.4,
-  waveAmplitude = 1,
-  particleSize = 2,
-  lerpSpeed = 0.1,
-  color = '#FF9FFC',
-  autoAnimate = false,
-  particleVariance = 1,
-  rotationSpeed = 0,
-  depthFactor = 1,
-  pulseSpeed = 3,
-  particleShape = 'capsule',
-  fieldStrength = 10
-}) => {
-  const meshRef = useRef(null);
-  const { viewport } = useThree();
-  const dummy = useMemo(() => new THREE.Object3D(), []);
+const vertexShader = `
+attribute vec2 position;
+attribute vec2 uv;
+varying vec2 vUv;
+void main() {
+  vUv = uv;
+  gl_Position = vec4(position, 0.0, 1.0);
+}
+`;
 
-  const lastMousePos = useRef({ x: 0, y: 0 });
-  const lastMouseMoveTime = useRef(0);
-  const virtualMouse = useRef({ x: 0, y: 0 });
+const fragmentShader = `
+precision highp float;
 
-  const particles = useMemo(() => {
-    const temp = [];
-    const width = viewport.width || 100;
-    const height = viewport.height || 100;
+uniform float iTime;
+uniform vec3 iResolution;
+uniform vec3 uColor;
+uniform float uAmplitude;
+uniform float uDistance;
+uniform vec2 uMouse;
 
-    for (let i = 0; i < count; i++) {
-      const t = Math.random() * 100;
-      const factor = 20 + Math.random() * 100;
-      const speed = 0.01 + Math.random() / 200;
-      const xFactor = -50 + Math.random() * 100;
-      const yFactor = -50 + Math.random() * 100;
-      const zFactor = -50 + Math.random() * 100;
+#define PI 3.1415926538
 
-      const x = (Math.random() - 0.5) * width;
-      const y = (Math.random() - 0.5) * height;
-      const z = (Math.random() - 0.5) * 20;
+const int u_line_count = 40;
+const float u_line_width = 7.0;
+const float u_line_blur = 10.0;
 
-      const randomRadiusOffset = (Math.random() - 0.5) * 2;
+float Perlin2D(vec2 P) {
+    vec2 Pi = floor(P);
+    vec4 Pf_Pfmin1 = P.xyxy - vec4(Pi, Pi + 1.0);
+    vec4 Pt = vec4(Pi.xy, Pi.xy + 1.0);
+    Pt = Pt - floor(Pt * (1.0 / 71.0)) * 71.0;
+    Pt += vec2(26.0, 161.0).xyxy;
+    Pt *= Pt;
+    Pt = Pt.xzxz * Pt.yyww;
+    vec4 hash_x = fract(Pt * (1.0 / 951.135664));
+    vec4 hash_y = fract(Pt * (1.0 / 642.949883));
+    vec4 grad_x = hash_x - 0.49999;
+    vec4 grad_y = hash_y - 0.49999;
+    vec4 grad_results = inversesqrt(grad_x * grad_x + grad_y * grad_y)
+        * (grad_x * Pf_Pfmin1.xzxz + grad_y * Pf_Pfmin1.yyww);
+    grad_results *= 1.4142135623730950;
+    vec2 blend = Pf_Pfmin1.xy * Pf_Pfmin1.xy * Pf_Pfmin1.xy
+               * (Pf_Pfmin1.xy * (Pf_Pfmin1.xy * 6.0 - 15.0) + 10.0);
+    vec4 blend2 = vec4(blend, vec2(1.0 - blend));
+    return dot(grad_results, blend2.zxzx * blend2.wwyy);
+}
 
-      temp.push({
-        t,
-        factor,
-        speed,
-        xFactor,
-        yFactor,
-        zFactor,
-        mx: x,
-        my: y,
-        mz: z,
-        cx: x,
-        cy: y,
-        cz: z,
-        vx: 0,
-        vy: 0,
-        vz: 0,
-        randomRadiusOffset
-      });
+float pixel(float count, vec2 resolution) {
+    return (1.0 / max(resolution.x, resolution.y)) * count;
+}
+
+float lineFn(vec2 st, float width, float perc, float offset, vec2 mouse, float time, float amplitude, float distance) {
+    float split_offset = (perc * 0.4);
+    float split_point = 0.1 + split_offset;
+
+    float amplitude_normal = smoothstep(split_point, 0.7, st.x);
+    float amplitude_strength = 0.5;
+    float finalAmplitude = amplitude_normal * amplitude_strength
+                           * amplitude * (1.0 + (mouse.y - 0.5) * 0.2);
+
+    float time_scaled = time / 10.0 + (mouse.x - 0.5) * 1.0;
+    float blur = smoothstep(split_point, split_point + 0.05, st.x) * perc;
+
+    float xnoise = mix(
+        Perlin2D(vec2(time_scaled, st.x + perc) * 2.5),
+        Perlin2D(vec2(time_scaled, st.x + time_scaled) * 3.5) / 1.5,
+        st.x * 0.3
+    );
+
+    float y = 0.5 + (perc - 0.5) * distance + xnoise / 2.0 * finalAmplitude;
+
+    float line_start = smoothstep(
+        y + (width / 2.0) + (u_line_blur * pixel(1.0, iResolution.xy) * blur),
+        y,
+        st.y
+    );
+
+    float line_end = smoothstep(
+        y,
+        y - (width / 2.0) - (u_line_blur * pixel(1.0, iResolution.xy) * blur),
+        st.y
+    );
+
+    return clamp(
+        (line_start - line_end) * (1.0 - smoothstep(0.0, 1.0, pow(perc, 0.3))),
+        0.0,
+        1.0
+    );
+}
+
+void mainImage(out vec4 fragColor, in vec2 fragCoord) {
+    vec2 uv = fragCoord / iResolution.xy;
+
+    float line_strength = 1.0;
+    for (int i = 0; i < u_line_count; i++) {
+        float p = float(i) / float(u_line_count);
+        line_strength *= (1.0 - lineFn(
+            uv,
+            u_line_width * pixel(1.0, iResolution.xy) * (1.0 - p),
+            p,
+            (PI * 1.0) * p,
+            uMouse,
+            iTime,
+            uAmplitude,
+            uDistance
+        ));
     }
-    return temp;
-  }, [count, viewport.width, viewport.height]);
 
-  useFrame(state => {
-    const mesh = meshRef.current;
-    if (!mesh) return;
+    float colorVal = 1.0 - line_strength;
+    fragColor = vec4(uColor * colorVal, colorVal);
+}
 
-    const { viewport: v, pointer: m } = state;
+void main() {
+    mainImage(gl_FragColor, gl_FragCoord.xy);
+}
+`;
 
-    const mouseDist = Math.sqrt(Math.pow(m.x - lastMousePos.current.x, 2) + Math.pow(m.y - lastMousePos.current.y, 2));
+const Threads = ({ color = [1, 1, 1], amplitude = 1, distance = 0, enableMouseInteraction = false, ...rest }) => {
+  const containerRef = useRef(null);
+  const animationFrameId = useRef(0);
 
-    if (mouseDist > 0.001) {
-      lastMouseMoveTime.current = Date.now();
-      lastMousePos.current = { x: m.x, y: m.y };
-    }
+  // Keep the latest props in a ref so updating them mutates the live shader
+  // uniforms instead of tearing down and rebuilding the whole WebGL context.
+  const propsRef = useRef({ color, amplitude, distance, enableMouseInteraction });
+  propsRef.current = { color, amplitude, distance, enableMouseInteraction };
 
-    let destX = (m.x * v.width) / 2;
-    let destY = (m.y * v.height) / 2;
+  useEffect(() => {
+    const container = containerRef.current;
+    if (!container) return;
 
-    if (autoAnimate && Date.now() - lastMouseMoveTime.current > 2000) {
-      const time = state.clock.getElapsedTime();
-      destX = Math.sin(time * 0.5) * (v.width / 4);
-      destY = Math.cos(time * 0.5 * 2) * (v.height / 4);
-    }
+    const renderer = new Renderer({ alpha: true });
+    const gl = renderer.gl;
+    gl.clearColor(0, 0, 0, 0);
+    gl.enable(gl.BLEND);
+    gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
+    container.appendChild(gl.canvas);
 
-    const smoothFactor = 0.05;
-    virtualMouse.current.x += (destX - virtualMouse.current.x) * smoothFactor;
-    virtualMouse.current.y += (destY - virtualMouse.current.y) * smoothFactor;
-
-    const targetX = virtualMouse.current.x;
-    const targetY = virtualMouse.current.y;
-
-    const globalRotation = state.clock.getElapsedTime() * rotationSpeed;
-
-    particles.forEach((particle, i) => {
-      let { t, speed, mx, my, mz, cz, randomRadiusOffset } = particle;
-
-      t = particle.t += speed / 2;
-
-      const projectionFactor = 1 - cz / 50;
-      const projectedTargetX = targetX * projectionFactor;
-      const projectedTargetY = targetY * projectionFactor;
-
-      const dx = mx - projectedTargetX;
-      const dy = my - projectedTargetY;
-      const dist = Math.sqrt(dx * dx + dy * dy);
-
-      let targetPos = { x: mx, y: my, z: mz * depthFactor };
-
-      if (dist < magnetRadius) {
-        const angle = Math.atan2(dy, dx) + globalRotation;
-
-        const wave = Math.sin(t * waveSpeed + angle) * (0.5 * waveAmplitude);
-        const deviation = randomRadiusOffset * (5 / (fieldStrength + 0.1));
-
-        const currentRingRadius = ringRadius + wave + deviation;
-
-        targetPos.x = projectedTargetX + currentRingRadius * Math.cos(angle);
-        targetPos.y = projectedTargetY + currentRingRadius * Math.sin(angle);
-        targetPos.z = mz * depthFactor + Math.sin(t) * (1 * waveAmplitude * depthFactor);
+    const geometry = new Triangle(gl);
+    const program = new Program(gl, {
+      vertex: vertexShader,
+      fragment: fragmentShader,
+      uniforms: {
+        iTime: { value: 0 },
+        iResolution: {
+          value: new Color(gl.canvas.width, gl.canvas.height, gl.canvas.width / gl.canvas.height)
+        },
+        uColor: { value: new Color(...propsRef.current.color) },
+        uAmplitude: { value: propsRef.current.amplitude },
+        uDistance: { value: propsRef.current.distance },
+        uMouse: { value: new Float32Array([0.5, 0.5]) }
       }
-
-      particle.cx += (targetPos.x - particle.cx) * lerpSpeed;
-      particle.cy += (targetPos.y - particle.cy) * lerpSpeed;
-      particle.cz += (targetPos.z - particle.cz) * lerpSpeed;
-
-      dummy.position.set(particle.cx, particle.cy, particle.cz);
-
-      dummy.lookAt(projectedTargetX, projectedTargetY, particle.cz);
-      dummy.rotateX(Math.PI / 2);
-
-      const currentDistToMouse = Math.sqrt(
-        Math.pow(particle.cx - projectedTargetX, 2) + Math.pow(particle.cy - projectedTargetY, 2)
-      );
-
-      const distFromRing = Math.abs(currentDistToMouse - ringRadius);
-      let scaleFactor = 1 - distFromRing / 10;
-
-      scaleFactor = Math.max(0, Math.min(1, scaleFactor));
-
-      const finalScale = scaleFactor * (0.8 + Math.sin(t * pulseSpeed) * 0.2 * particleVariance) * particleSize;
-      dummy.scale.set(finalScale, finalScale, finalScale);
-
-      dummy.updateMatrix();
-
-      mesh.setMatrixAt(i, dummy.matrix);
     });
 
-    mesh.instanceMatrix.needsUpdate = true;
-  });
+    const mesh = new Mesh(gl, { geometry, program });
 
-  return (
-    <instancedMesh ref={meshRef} args={[undefined, undefined, count]}>
-      {particleShape === 'capsule' && <capsuleGeometry args={[0.1, 0.4, 4, 8]} />}
-      {particleShape === 'sphere' && <sphereGeometry args={[0.2, 16, 16]} />}
-      {particleShape === 'box' && <boxGeometry args={[0.3, 0.3, 0.3]} />}
-      {particleShape === 'tetrahedron' && <tetrahedronGeometry args={[0.3]} />}
-      <meshBasicMaterial color={color} />
-    </instancedMesh>
-  );
+    // The fragment shader is heavy (per-pixel Perlin noise across many lines), so
+    // its cost scales with the number of rendered pixels. Cap the internal render
+    // resolution to keep large / high-DPI screens smooth; the effect is soft
+    // enough that the downscale is imperceptible.
+    const MAX_RENDER_DIM = 1920;
+    function resize() {
+      const { clientWidth, clientHeight } = container;
+      const baseDpr = Math.min(window.devicePixelRatio || 1, 2);
+      const longestSide = Math.max(clientWidth, clientHeight) * baseDpr;
+      const dpr = longestSide > MAX_RENDER_DIM ? (baseDpr * MAX_RENDER_DIM) / longestSide : baseDpr;
+      renderer.dpr = dpr;
+      renderer.setSize(clientWidth, clientHeight);
+      program.uniforms.iResolution.value.r = gl.canvas.width;
+      program.uniforms.iResolution.value.g = gl.canvas.height;
+      program.uniforms.iResolution.value.b = gl.canvas.width / gl.canvas.height;
+    }
+
+    const resizeObserver = new ResizeObserver(resize);
+    resizeObserver.observe(container);
+    window.addEventListener('resize', resize);
+    resize();
+
+    const currentMouse = [0.5, 0.5];
+    let targetMouse = [0.5, 0.5];
+
+    function handleMouseMove(e) {
+      const rect = container.getBoundingClientRect();
+      const x = (e.clientX - rect.left) / rect.width;
+      const y = 1.0 - (e.clientY - rect.top) / rect.height;
+      targetMouse = [x, y];
+    }
+    function handleMouseLeave() {
+      targetMouse = [0.5, 0.5];
+    }
+    container.addEventListener('mousemove', handleMouseMove);
+    container.addEventListener('mouseleave', handleMouseLeave);
+
+    // Only animate while the canvas is on screen and the tab is visible, so the
+    // shader never burns GPU/CPU for something the user can't see.
+    let isVisible = true;
+    const intersectionObserver = new IntersectionObserver(
+      entries => {
+        isVisible = entries[0].isIntersecting;
+      },
+      { threshold: 0 }
+    );
+    intersectionObserver.observe(container);
+
+    function update(t) {
+      animationFrameId.current = requestAnimationFrame(update);
+      if (!isVisible || document.hidden) return;
+
+      const { color, amplitude, distance, enableMouseInteraction } = propsRef.current;
+
+      program.uniforms.uColor.value.set(...color);
+      program.uniforms.uAmplitude.value = amplitude;
+      program.uniforms.uDistance.value = distance;
+
+      if (enableMouseInteraction) {
+        const smoothing = 0.05;
+        currentMouse[0] += smoothing * (targetMouse[0] - currentMouse[0]);
+        currentMouse[1] += smoothing * (targetMouse[1] - currentMouse[1]);
+        program.uniforms.uMouse.value[0] = currentMouse[0];
+        program.uniforms.uMouse.value[1] = currentMouse[1];
+      } else {
+        program.uniforms.uMouse.value[0] = 0.5;
+        program.uniforms.uMouse.value[1] = 0.5;
+      }
+      program.uniforms.iTime.value = t * 0.001;
+
+      renderer.render({ scene: mesh });
+    }
+    animationFrameId.current = requestAnimationFrame(update);
+
+    return () => {
+      if (animationFrameId.current) cancelAnimationFrame(animationFrameId.current);
+      resizeObserver.disconnect();
+      intersectionObserver.disconnect();
+      window.removeEventListener('resize', resize);
+      container.removeEventListener('mousemove', handleMouseMove);
+      container.removeEventListener('mouseleave', handleMouseLeave);
+      if (container.contains(gl.canvas)) container.removeChild(gl.canvas);
+      gl.getExtension('WEBGL_lose_context')?.loseContext();
+    };
+  }, []);
+
+  return <div ref={containerRef} className="w-full h-full relative" {...rest} />;
 };
 
-const Antigravity = props => {
-  return (
-    <Canvas camera={{ position: [0, 0, 50], fov: 35 }}>
-      <AntigravityInner {...props} />
-    </Canvas>
-  );
-};
-
-export default Antigravity;
+export default Threads;

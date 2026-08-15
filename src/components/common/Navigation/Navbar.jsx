@@ -9,13 +9,14 @@ const Navbar = () => {
   const navigate = useNavigate();
   const location = useLocation();
 
-  // Check if we are on the Home page
-  const isHome = location.pathname == "/";
-  // Apply black on home, white on all other pages
-  const navBg = isHome ? "bg-transparent" : "bg-white";
- 
+  // // Check if we are on the Home page
+  // const isHome = location.pathname == "/";
+  // const isTelemetry = location.pathname == "/telemetry";
+  // // Apply black on home, white on all other pages
+  // const navBg = isHome || isTelemetry ? "bg-transparent" : "bg-white";
+
   return (
-    <div className={`flex items-start justify-between lg:h-[4.5vw]  h-11 ${navBg}`}>
+    <div className={"flex items-start justify-between lg:h-[4.5vw] h-11"}>
       <div className="h-full">
         <button
           className="cursor-pointer h-full"
@@ -42,7 +43,7 @@ const Navbar = () => {
               onClick={() => {
                 navigate("/fullnav");
               }}
-              className="w-full cursor-pointer pt-1 pl-14 pr-10  lg:pl-[7vw]"
+              className="w-full cursor-pointer pt-1 pl-14 pr-10  lg:pl-[6.5vw]"
             >
               <RiMenu4Fill />
             </button>

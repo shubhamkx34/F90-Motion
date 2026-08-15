@@ -3,7 +3,7 @@ import Video from "./Video";
 
 const Home_top = () => {
   return (
-    <div className="font-[font1] text-[11vw] lg:text-[9vw]  lg:pt-0  ">
+    <div className="font-[font1] text-[11vw] lg:text-[9vw]  lg:pt-17  ">
       <div className=" leading-[1.4] lg:leading-32">
         The <span className="text-red-800">monster</span>
       </div>

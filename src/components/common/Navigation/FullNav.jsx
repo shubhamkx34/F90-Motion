@@ -110,6 +110,10 @@ const FullNav = () => {
           </div>
 
           <div
+          div
+            onClick={() => {
+              navigate("/telemetry");
+            }}
             onMouseEnter={() => handleMouseEnter(2)}
             onMouseLeave={() => handleMouseLeave(2)}
             className="link cursor-pointer relative h-full w-full  bg-black text-zinc-500"

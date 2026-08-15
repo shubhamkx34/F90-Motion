@@ -119,25 +119,9 @@ const Records = () => {
   });
 
   return (
-    <div id="main" className="h-screen relative z-50 w-full overflow-y-auto overflow-x-hidden bg-white p-2">
-      <div className="z-0 inset-0" style={{ width: "100%", height: "100%", position: "absolute" }}>
-        <Antigravity
-          count={150}
-          magnetRadius={6}
-          ringRadius={7}
-          waveSpeed={0.4}
-          waveAmplitude={1}
-          particleSize={1.5}
-          lerpSpeed={0.05}
-          color="#5227FF"
-          autoAnimate
-          particleVariance={1}
-          rotationSpeed={0}
-          depthFactor={1}
-          pulseSpeed={3}
-          particleShape="capsule"
-          fieldStrength={10}
-        />
+    <div id="main" className="h-screen relative  w-full overflow-y-auto overflow-x-hidden bg-white p-2">
+      <div className="w-screen h-screen absolute inset-0 ">
+        <Threads amplitude={2.7} distance={0} enableMouseInteraction />
       </div>
 
       <div className="pt-[32vh]">
