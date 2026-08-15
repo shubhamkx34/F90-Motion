@@ -1,10 +1,9 @@
 import { useGSAP } from "@gsap/react";
-import gsap from "gsap";
+import gsap, { Elastic } from "gsap";
 import { ScrollTrigger } from "gsap/all";
 import React, { useRef, useEffect, useState } from "react";
 import SplitFlapText from "../components/Machine/flaptext";
 import FlyingPosters from "../components/Machine/flyposter";
-
 
 const Machine = () => {
   gsap.registerPlugin(ScrollTrigger);
@@ -16,7 +15,14 @@ const Machine = () => {
   const flipRef = useRef(null); // Replaces duplicate textRef for the bottom block
 
   const imgarray = ["/img1.jpg", "/img2.jpg", "/img3.jpg", "/img4.jpg", "/img5.jpg", "/img6.jpg", "/img7.jpg", "/img8.jpg", "/img9.jpg"];
-  const items = ["/Machine img/img1.png", "/Machine img/img2.png", "/Machine img/img3.png","/Machine img/img4.png","/Machine img/img5.png","/Machine img/img6.png"];
+  const items = [
+    "/Machine img/img1.png",
+    "/Machine img/img2.png",
+    "/Machine img/img3.png",
+    "/Machine img/img4.png",
+    "/Machine img/img5.png",
+    "/Machine img/img6.png",
+  ];
 
   // State for background color
   const [isScrolled, setIsScrolled] = useState(false);
@@ -59,6 +65,18 @@ const Machine = () => {
       opacity: 0,
       duration: 1.5,
       ease: "power3.out",
+    });
+
+    gsap.from(flipRef.current, {
+      scrollTrigger: {
+        trigger: flipRef.current,
+        start: "top 75%",
+        toggleActions: "play none none reverse",
+      },
+      y: -500,
+      opacity: 0,
+      duration: 2,
+      ease: "bounce.out",
     });
   });
 
@@ -114,40 +132,40 @@ const Machine = () => {
 
       <div ref={climaxRef} className="climax mt-[23vh] flex">
         <div className="left w-1/2 " style={{ height: "850px" }}>
-          <FlyingPosters items={items} planeWidth={610} planeHeight={600} distortion={0.6} scrollEase={0.11} cameraFov={65} cameraZ={20} />
+          <FlyingPosters items={items} planeWidth={605} planeHeight={600} distortion={0.6} scrollEase={0.11} cameraFov={65} cameraZ={20} />
         </div>
-        <div className="right w-1/2 text-[1.5vw] p-20 font-[font1] text-white cursor-pointer">
-          <p className="text-neutral-300 font-light text-[1.1vw] leading-[1.8] tracking-wide">
-            BMW <span className="text-emerald-500 font-bold tracking-wider">M5 CS f90 </span> Model is a precision-engineered track weapon stripped of excess and
-            built for pure adrenaline.
+        <div className="right w-1/2 text-[1.5vw] p-20 font-[font1] text-white cursor-pointer flex flex-col justify-center">
+          <p className="text-slate-400 font-light text-[1.1vw] leading-[2.2] tracking-wide">
+            BMW <span className="text-white font-semibold tracking-widest uppercase">M5 CS F90</span> is a precision-engineered track weapon stripped
+            of excess and built for pure adrenaline.
             <br />
             <br />
-            At its core beats a monstrous <span className="text-white font-medium">4.4-liter twin-turbo V8</span> engine, unleashing a brutal
-            <span className="text-red-500 font-bold">627 horsepower</span> that catapults this super sedan from
-            <span className="text-white font-medium">0 to 60 mph</span> in a blinding <span className="text-blue-500 font-bold">2.9 seconds</span>.
+            At its core beats a monstrous <span className="text-white font-medium">4.4-liter twin-turbo V8</span> engine, unleashing a brutal{" "}
+            <span className="text-white font-medium">627 horsepower</span> that catapults this super sedan from{" "}
+            <span className="text-white font-medium">0 to 100 Kmph</span> in a blinding <span className="text-white font-medium">2.9 seconds</span>.
             <br />
             <br />
-            It sheds dead weight through an aggressive carbon diet, utilizing
-            <span className="text-white font-medium">Carbon Fiber Reinforced Plastic (CFRP)</span> to slash
-            <span className="text-amber-500 font-bold">70 kg (154 lbs)</span> off its waistline.
+            It sheds dead weight through an aggressive carbon diet, utilizing{" "}
+            <span className="text-white font-medium">Carbon Fiber Reinforced Plastic (CFRP)</span> to slash{" "}
+            <span className="text-white font-medium">70 kg (154 lbs)</span> off its waistline.
             <br />
             <br />
-            To harness this fury, a relentless <span className="text-blue-400 font-medium">M xDrive</span> system paired with an
-            <span className="text-blue-400 font-medium">Active M Differential</span> guarantees maximum traction, with full switchability to{" "}
-            <span className="text-gray-500 font-bold">2WD</span> for pure rear-wheel control.
+            To harness this fury, a relentless <span className="text-white font-medium">M xDrive</span> system paired with an{" "}
+            <span className="text-white font-medium">Active M Differential</span> guarantees maximum traction, with full switchability to{" "}
+            <span className="text-white font-medium">2WD</span> for pure rear-wheel control.
             <br />
             <br />
             Beneath the surface, the <span className="text-white font-medium">CS-tuned suspension</span> dictates razor-sharp geometry with a lower
-            stance and springs that are <span className="text-amber-500 font-bold">10% firmer</span>.
+            stance and springs that are <span className="text-white font-medium">10% firmer</span>.
             <br />
             <br />
-            Inside, the cockpit features hardcore <span className="text-slate-500 font-medium">M Carbon bucket seats</span>, while massive <br/>
-            <span className="text-red-500 font-medium">M Carbon Ceramic brakes</span> deliver relentless, fade-free stopping power.
+            Inside, the cockpit features hardcore <span className="text-white font-medium">M Carbon bucket seats</span>, while massive{" "}
+            <span className="text-white font-medium">M Carbon Ceramic brakes</span> deliver relentless, fade-free stopping power.
           </p>
         </div>
       </div>
 
-      <div className="fliptext ml-[15vw] mt-[30vh]">
+      <div ref={flipRef} className="fliptext ml-[15vw] mt-[40vh]">
         <SplitFlapText
           words={["LAUNCH CONTROL", "M MODE ACTIVE ", "627 HORSEPOWER"]}
           flipDuration={0.11}

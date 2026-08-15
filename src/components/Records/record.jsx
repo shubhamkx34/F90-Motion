@@ -2,7 +2,7 @@ import React from "react";
 
 const Record = (props) => {
   return (
-    <div className="group relative lg:w-full lg:h-full lg:mt-0 mt-5 transition-all hover:rounded-4xl overflow-hidden">
+    <div className="group z-50 relative lg:w-full lg:h-full lg:mt-0 mt-5 transition-all hover:rounded-4xl overflow-hidden">
       <img className="h-full w-full object-cover" src={props.image} alt="" />
 
       <div className="absolute cursor-pointer top-0 left-0 h-full w-full flex items-center justify-center opacity-0 group-hover:opacity-100 group-hover:bg-black/30 transition-all">
