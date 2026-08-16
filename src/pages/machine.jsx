@@ -144,7 +144,7 @@ const Machine = () => {
 
         <div ref={climaxRef} className="climax mt-[23vh] flex">
           <div className="left w-1/2 " style={{ height: "850px" }}>
-            <FlyingPosters items={items} planeWidth={605} planeHeight={600} distortion={0.9} scrollEase={0.11} cameraFov={65} cameraZ={20} />
+            <FlyingPosters items={items} planeWidth={420} planeHeight={420} distortion={3.0} scrollEase={0.010} cameraFov={45} cameraZ={20} />
           </div>
           <div className="right w-1/2 text-[1.5vw] p-20 font-[font1] text-white cursor-pointer flex flex-col justify-center">
             <p className="text-slate-400 font-light text-[1.1vw] leading-[2.2] tracking-wide">
