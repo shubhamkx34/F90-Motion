@@ -6,7 +6,6 @@ const telemetryData = {
   EFFICIENT: {
     bgHue: 150,
     bgSpeed: 0.5,
-
     oilTemp: { value: "95°C", color: "text-emerald-500", bar: "bg-emerald-500 w-[45%]" },
     boost: { value: "0.4 BAR", color: "text-emerald-500", bar: "bg-emerald-500 w-[20%]" },
     coolant: { value: "85°C", color: "text-emerald-500", bar: "bg-emerald-500 w-[40%]" },
@@ -20,9 +19,8 @@ const telemetryData = {
     },
   },
   SPORT: {
-    bgHue: 40,
+    bgHue: -145,
     bgSpeed: 0.8,
-
     oilTemp: { value: "105°C", color: "text-orange-500", bar: "bg-orange-500 w-[75%]" },
     boost: { value: "1.2 BAR", color: "text-orange-500", bar: "bg-orange-500 w-[65%]" },
     coolant: { value: "95°C", color: "text-orange-500", bar: "bg-orange-500 w-[60%]" },
@@ -36,9 +34,8 @@ const telemetryData = {
     },
   },
   TRACK: {
-    bgHue: 0,
+    bgHue: -125,
     bgSpeed: 1.5,
-
     oilTemp: { value: "115°C", color: "text-red-500", bar: "bg-red-500 w-[95%] " },
     boost: { value: "1.8 BAR", color: "text-red-500", bar: "bg-red-500 w-[98%] " },
     coolant: { value: "105°C", color: "text-red-500", bar: "bg-red-500 w-[85%]" },
