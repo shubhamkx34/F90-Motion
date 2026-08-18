@@ -24,10 +24,6 @@ const Machine = () => {
     "/Machine img/img6.png",
   ];
 
-  useEffect(() => {
-    window.scrollTo(0, 0);
-  }, []);
-
   useGSAP(() => {
     ScrollSmoother.create({
       wrapper: "#smooth-wrapper",

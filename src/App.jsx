@@ -3,12 +3,15 @@ import { Route, Routes } from "react-router-dom";
 import Home from "./pages/Home";
 import Machine from "./pages/machine";
 import Records from "./pages/records";
-import Telemetry from "./pages/telemetry"
+import Telemetry from "./pages/telemetry";
 import Navbar from "./components/common/Navigation/Navbar";
 import FullNav from "./components/common/Navigation/FullNav";
-import Zig from './components/common/Animation/zig'
-
+import Zig from "./components/common/Animation/zig";
+import { useEffect } from "react";
 const App = () => {
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, []);
   return (
     <div className="w-screen min-h-screen text-4xl text-white overflow-x-hidden">
       <div className="fixed top-0 left-0 w-full z-40">
