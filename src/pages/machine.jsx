@@ -38,7 +38,7 @@ const Machine = () => {
         trigger: imageDivRef.current,
         start: "top 14%",
         end: "top -240%",
-        scrub: 2,
+        scrub: 1,
         pin: true,
         onUpdate: (elem) => {
           const imgindex = Math.min(Math.floor(elem.progress * imgarray.length), imgarray.length - 1);
