@@ -104,6 +104,3 @@ F90-Motion/
 
 ---
 
-## 👨‍💻 Author
-
-**Shubham Kumar Sah** — [@shubhamkx34](https://github.com/shubhamkx34)
